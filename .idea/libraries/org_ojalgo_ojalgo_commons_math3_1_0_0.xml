@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="org.ojalgo:ojalgo-commons-math3:1.0.0" type="repository">
+    <properties maven-id="org.ojalgo:ojalgo-commons-math3:1.0.0" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/ojalgo/ojalgo-commons-math3/1.0.0/ojalgo-commons-math3-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
