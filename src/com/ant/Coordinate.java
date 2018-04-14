@@ -2,6 +2,7 @@ package com.ant;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A coordinate in a predefined grid size: contains problem-specific logic to get neighbours/velidation
@@ -17,13 +18,13 @@ public class Coordinate extends AdditivePair<Integer> {
     Coordinate(int x, int y){super(x,y);}
 
     @Override
-    Collection<Coordinate> getAccessiblePairs(boolean diagonalsAllowed){
-        Collection<Coordinate> neighbours = new ArrayList<>(8);
+    List<Coordinate> getAccessiblePairs(boolean diagonalsAllowed){
+        List<Coordinate> neighbours = new ArrayList<>(8);
 
         //here i check potential neighbours, abusing the fact that they will lie in the 3x3 box surrounding
         //the coordinate (in the context of this problem). I verify that (a) the distance is 1, (b) the coordinate is
         //valid (in the grid)
-        Collection<Coordinate> candidateNeighbours = new ArrayList<>();
+        List<Coordinate> candidateNeighbours = new ArrayList<>();
         candidateNeighbours.add(this.add(N));
         candidateNeighbours.add(this.add(E));
         candidateNeighbours.add(this.add(S));
@@ -43,7 +44,7 @@ public class Coordinate extends AdditivePair<Integer> {
         return neighbours;
     }
 
-    Collection<Coordinate> getNeighbours(boolean diagonalsAllowed){
+    List<Coordinate> getNeighbours(boolean diagonalsAllowed){
         return getAccessiblePairs(diagonalsAllowed);
     }
 

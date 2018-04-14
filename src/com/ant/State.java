@@ -2,6 +2,7 @@ package com.ant;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A simplestate (i.e. pair of coordinates), enriched with Direction dir specifying the direction of origin.
@@ -38,12 +39,12 @@ class State extends SimpleState {
      * @param backtrackingAllowed
      * @return
      */
-    static Collection<MyPair<Coordinate>> getAccessibleMoves(MyPair<Coordinate> ant, boolean diagonalsAllowed, boolean backtrackingAllowed){
-        Collection<Coordinate> accessiblePositions = ant.X.getAccessiblePairs(diagonalsAllowed);
+    static List<MyPair<Coordinate>> getAccessibleMoves(MyPair<Coordinate> ant, boolean diagonalsAllowed, boolean backtrackingAllowed){
+        List<Coordinate> accessiblePositions = ant.X.getAccessiblePairs(diagonalsAllowed);
         if(!backtrackingAllowed)
             accessiblePositions.remove(ant.X.add(ant.Y.inverse()));
 
-        Collection<MyPair<Coordinate>> moves = new ArrayList<>();
+        List<MyPair<Coordinate>> moves = new ArrayList<>();
 
         for(Coordinate coordinate : accessiblePositions){
             moves.add(new MyPair<>(coordinate, (Coordinate)coordinate.subtract(ant.X)));
@@ -80,15 +81,11 @@ class State extends SimpleState {
 
     @Override
     boolean isAbsorbing(boolean lookForCrossing){
-        //this significantly speeds up this method, abusing the knowledge that directionOfTravel has coordiantes at most 1
-        if(Math.abs(X.X - Y.X) > 1 || Math.abs(X.Y-Y.Y) > 1)
-            return false;
-
         if (!lookForCrossing)
             return super.isAbsorbing(lookForCrossing);
 
-        return X.subtract(directionOfTravel.X).equals(Y) //X's previous position was where Y is now
-                && Y.subtract(directionOfTravel.Y).equals(X); //Y's previous position was where X is now
+        return Y.add(directionOfTravel.X).equals(X) //X's previous position was where Y is now
+                && X.add(directionOfTravel.Y).equals(Y); //Y's previous position was where X is now
     }
 
     @Override
@@ -135,13 +132,5 @@ class State extends SimpleState {
         Coordinate dB = Coordinate.decode(code % (int)Math.pow(8,5));
 
         return new State(new Coordinate(AX,AY), new Coordinate(BX,BY), dA,dB);
-    }
-
-    /**
-     * switches the ants' data, so ((x1,y1),(x2,y2),(d1,d2)) becomes ((x2,y2),(x1,y1),(d2,d1))
-     * @return
-     */
-    State swapped(){
-        return new State(Y,X,directionOfTravel.Y,directionOfTravel.X);
     }
 }

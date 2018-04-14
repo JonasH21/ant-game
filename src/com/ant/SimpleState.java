@@ -2,6 +2,7 @@ package com.ant;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 class SimpleState extends AbstractState{
     SimpleState(Coordinate antA, Coordinate antB){super(antA,antB);}
@@ -12,10 +13,10 @@ class SimpleState extends AbstractState{
     }
 
     @Override
-    Collection<SimpleState> getAccessiblePairs(boolean diagonalsAllowed){
-        Collection<SimpleState> accessibleSimpleStates = new ArrayList<>(64);
-        Collection<Coordinate> aNeighbours = X.getNeighbours(diagonalsAllowed);
-        Collection<Coordinate> bNeighbours = Y.getNeighbours(diagonalsAllowed);
+    List<SimpleState> getAccessiblePairs(boolean diagonalsAllowed){
+        List<SimpleState> accessibleSimpleStates = new ArrayList<>(64);
+        List<Coordinate> aNeighbours = X.getNeighbours(diagonalsAllowed);
+        List<Coordinate> bNeighbours = Y.getNeighbours(diagonalsAllowed);
 
         for(Coordinate aNeighbour : aNeighbours){
             for(Coordinate bNeighbour : bNeighbours){
@@ -50,14 +51,14 @@ class SimpleState extends AbstractState{
      * @param diagonalsAllowed Could the ants have come from a diagonal direction
      * @return All potential states for the SimpleState s
      */
-    Collection<State> toTransientStates(boolean diagonalsAllowed, boolean lookForCrossing){
-        Collection<Coordinate> legalDirections = new ArrayList<>();
+    List<State> toTransientStates(boolean diagonalsAllowed, boolean lookForCrossing){
+        List<Coordinate> legalDirections = new ArrayList<>();
         legalDirections.add(Coordinate.N);
         legalDirections.add(Coordinate.E);
         legalDirections.add(Coordinate.S);
         legalDirections.add(Coordinate.W);
         if(diagonalsAllowed) legalDirections.addAll(Coordinate.CornerAdjacents);
-        Collection<State> states = new ArrayList<>((int)Math.pow(legalDirections.size(),2));
+        List<State> states = new ArrayList<>((int)Math.pow(legalDirections.size(),2));
 
 
         for(Coordinate dA : legalDirections){

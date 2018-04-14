@@ -10,5 +10,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="REK" />
     <orderEntry type="library" name="com.amazonaws:aws-java-sdk:1.8.1" level="project" />
+    <orderEntry type="library" name="com.github.sharedlibs:stopwatch-java:1.0.0-Beta1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="springframework:spring:1.2.6" level="project" />
   </component>
 </module>

@@ -1,5 +1,7 @@
 package com.ant;
 
+import java.util.Objects;
+
 class MyTuple<T,U> {
     T X; U Y;
 
@@ -18,7 +20,7 @@ class MyTuple<T,U> {
 
     @Override
     public int hashCode(){
-        return X.hashCode() ^ Y.hashCode();
+        return Objects.hash(X,Y);
     }
 }
 

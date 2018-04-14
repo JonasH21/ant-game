@@ -1,6 +1,9 @@
 package com.ant;
 
 import java.util.*;
+
+import com.github.sharedlibs.stopwatch.Stopwatch;
+import org.springframework.util.StopWatch;
 import org.zouzias.rek.algorithms.REKSolver;
 import org.zouzias.rek.matrix.DoubleMatrix;
 import org.zouzias.rek.matrix.SparseMatrix;
@@ -9,7 +12,7 @@ import org.zouzias.rek.vector.DoubleVector;
 
 public class Main {
     static Collection<Coordinate> GRID;
-    private static HashMap<MyPair<Coordinate>, Collection<MyPair<Coordinate>>> AvailableMoves = new HashMap<>();
+    private static HashMap<MyPair<Coordinate>, List<MyPair<Coordinate>>> AvailableMoves = new HashMap<>();
 
 
 
@@ -76,9 +79,10 @@ public class Main {
         System.out.println("Setup: backtracking " + backtrackingAllowed + ", diagonals " + diagonalsAllowed + ", " + (lookForCrossing ? "crossing" : "collide"));
         System.out.println("*********");
 
-        MyTuple<List<AbstractState>, Integer> stateSpaceRes = getStateSpace(backtrackingAllowed, diagonalsAllowed, lookForCrossing);
+        MyTuple<List<AbstractState>, HashMap<AbstractState, Integer>> stateSpaceRes = getStateSpace(backtrackingAllowed, diagonalsAllowed, lookForCrossing);
         List<AbstractState> stateSpace = stateSpaceRes.X;
-        int initialStateIndex = stateSpaceRes.Y;
+        HashMap<AbstractState,Integer> stateSpaceMap = stateSpaceRes.Y;
+        int initialStateIndex = stateSpaceRes.Y.get(getInitialState(backtrackingAllowed,lookForCrossing));
 
         if(initialStateIndex<0)
             throw new RuntimeException("Initial state index not found");
@@ -94,45 +98,71 @@ public class Main {
 
         System.out.println("Populating Q with transition probabilities");
 
+        StopWatch s1 = new StopWatch("Check coverage of states");
+        StopWatch s2 = new StopWatch("Covered before logic");
+        StopWatch s3 = new StopWatch("Get moves");
+        StopWatch s4 = new StopWatch("Check transience");
+        StopWatch s5 = new StopWatch("Get index and store in matrix");
+        StopWatch s6 = new StopWatch("Get index");
+        StopWatch s7 = new StopWatch("Store in mtx");
+        s1.setKeepTaskList(false);
+        s2.setKeepTaskList(false);
+        s3.setKeepTaskList(false);
+        s4.setKeepTaskList(false);
+        s5.setKeepTaskList(false);
+        s6.setKeepTaskList(false);
+        s7.setKeepTaskList(false);
+
         //find probability of transitioning from transient state s to transient space t
         //matrix A here is I-Q
         int rowIndex = -1; int colIndex;
         for(AbstractState s : stateSpace){
             rowIndex++;
-            if(rowIndex % 100 == 0)
+            if(rowIndex % 1000 == 0) {
+                System.out.println("Coverage chk / coverage lg / moves / transience / index+store (index / store)");
+                System.out.print(s1.getTotalTimeMillis()+" / ");
+                System.out.print(s2.getTotalTimeMillis()+" / ");
+                System.out.print(s3.getTotalTimeMillis()+" / ");
+                System.out.print(s4.getTotalTimeMillis()+" / ");
+                System.out.print(s5.getTotalTimeMillis()+" (");
+                    System.out.print(s6.getTotalTimeMillis()+" / ");
+                    System.out.print(s7.getTotalTimeMillis()+")\n");
                 System.out.println("computing row " + rowIndex + " for state " + s);
-
-            MyPair<Coordinate> stateOfA = ((State)s).getStateX();
-            MyPair<Coordinate> stateOfB = ((State)s).getStateY();
-            Collection<MyPair<Coordinate>> movesForA;
-            Collection<MyPair<Coordinate>> movesForB;
-
-            //abuse the fact that I know how the stateSpace is ordered, and that if this predicate is true then I have already
-            //calculated the probability.
-
-            boolean coveredBefore = stateOfA.X.X > stateOfB.X.X && stateOfA.Y.Y > stateOfB.Y.Y;
-            if(coveredBefore){
-                DoubleVector calculatedRow = A.getRow(stateSpace.indexOf(((State) s).swapped()));
-                for(int i = 0; i<calculatedRow.size(); i++){
-                    if(calculatedRow.get(i) != 0d){
-                        State correspondingDestinationState = (State)stateSpace.get(i);
-                        State swappedState = correspondingDestinationState.swapped();
-
-                        A.set(rowIndex, stateSpace.indexOf(swappedState), calculatedRow.get(i));
-                    }
-                }
-
-                continue;
             }
 
+            s1.start("");
+            MyPair<Coordinate> stateOfA = ((State)s).getStateX();
+            MyPair<Coordinate> stateOfB = ((State)s).getStateY();
+            List<MyPair<Coordinate>> movesForA;
+            List<MyPair<Coordinate>> movesForB;
+            //using Collection<MyPair<Coordinate>> (ms): 11 / 6 / 908 / 11733 / 84224 (73998 / 8933)
+            //using List<MyPair<Coordinate>>             14 / 3 / 299 /  7450 / 76947 (60196 / 15687)
+            s1.stop();
+            s2.start("");
+            s2.stop();
+
+            s3.start("Get moves");
             if(AvailableMoves.containsKey(stateOfA)) movesForA = AvailableMoves.get(stateOfA);
-            else movesForA = State.getAccessibleMoves(stateOfA, diagonalsAllowed, backtrackingAllowed);
+            else
+                {
+                movesForA = State.getAccessibleMoves(stateOfA, diagonalsAllowed, backtrackingAllowed);
+                AvailableMoves.put(stateOfA, movesForA);
+            }
 
             if(AvailableMoves.containsKey(stateOfB)) movesForB = AvailableMoves.get(stateOfB);
-            else movesForB = State.getAccessibleMoves(stateOfB, diagonalsAllowed, backtrackingAllowed);
+            else
+                {
+                movesForB = State.getAccessibleMoves(stateOfB, diagonalsAllowed, backtrackingAllowed);
+                AvailableMoves.put(stateOfB, movesForB);
+            }
 
+            //without caching available moves (ms): 602 / 4 / 1840 / 2219 / 154888 (125025 / 25897)
+            // with     "   "   "   "      "        43  / 4 / 790  / 5316 / 133301 (107359 / 22406)
+            s3.stop();
+
+            s4.start("Check transience");
             //check which of the A,B move combinations is possible given the absorbing property
-            Collection<State> validatedStates = new ArrayList<>();
+            List<State> validatedStates = new ArrayList<>();
             for(MyPair<Coordinate> moveForA : movesForA){
                 for(MyPair<Coordinate> moveForB : movesForB){
                     State proposedState = new State(moveForA.X, moveForB.X, moveForA.Y, moveForB.Y);
@@ -141,29 +171,49 @@ public class Main {
                     }
                 }
             }
+            s4.stop();
 
+            s5.start("Get index and store in matrix");
             double probability = 1d/(double)(validatedStates.size());
             for(State validatedState : validatedStates){
-                colIndex = stateSpace.indexOf(validatedState);
+                s6.start("");
+                colIndex = stateSpaceMap.get(validatedState);
+                s6.stop();
+                s7.start("");
                 if(colIndex == -1){
                     throw new RuntimeException();
                 }
 
-                double mtxEntry = rowIndex == colIndex ? 1d-probability : -probability;
-
+                double mtxEntry = -probability;
                 //A.addToEntry(rowIndex,colIndex,mtxEntry);
                 A.set(rowIndex,colIndex,mtxEntry);
+                s7.stop();
             }
+            s5.stop();
         }
 
         double[] one = new double[dim];
         Arrays.fill(one, 1d);
 
+        for(int k = 0; k < dim; k++){
+            A.set(k,k,1d);
+        }
+
         System.out.println("Solving with REK");
         DoubleVector oneREK = new DenseVector(one);
         REKSolver solverREK = new REKSolver();
-        DoubleVector solutionREK = solverREK.solve(A,oneREK, 600d);
+        DoubleVector solutionREK = solverREK.solve(A,oneREK, 240d);
         double e = solutionREK.get(initialStateIndex);
+        System.out.println("t_" + initialStateIndex + "=" + e);
+
+        solutionREK = solverREK.solve(A,oneREK, 300d);
+        solutionREK = solverREK.solve(A,oneREK, 450d);
+        solutionREK = solverREK.solve(A,oneREK, 600d);
+        solutionREK = solverREK.solve(A,oneREK, 900d);
+        solutionREK = solverREK.solve(A,oneREK, 1200d);
+        solutionREK = solverREK.solve(A,oneREK, 3000d);
+
+        e = solutionREK.get(initialStateIndex);
         System.out.println("t_" + initialStateIndex + "=" + e);
 
         /*
@@ -199,18 +249,18 @@ public class Main {
             return new State(new Coordinate(0,0), new Coordinate(7,7), Coordinate.O,Coordinate.O);
     }
 
-    private static MyTuple<List<AbstractState>, Integer> getStateSpace(boolean backtrackingAllowed, boolean diagonalsAllowed, boolean lookForCrossing){
+    private static MyTuple<List<AbstractState>, HashMap<AbstractState, Integer>> getStateSpace(boolean backtrackingAllowed, boolean diagonalsAllowed, boolean lookForCrossing){
         boolean useEnrichedStateSpace = !backtrackingAllowed || lookForCrossing;
         int initialCapacity = estimateStateSpaceSize(backtrackingAllowed,diagonalsAllowed, lookForCrossing);
 
         List<AbstractState> stateSpace = new ArrayList<>(initialCapacity);
-        AbstractState initialState = getInitialState(backtrackingAllowed, lookForCrossing);
-        int initialStateIndex = -1;
+        HashMap<AbstractState, Integer> stateSpaceMap = new HashMap<>(initialCapacity);
+
         System.out.println("Populating state space, estimated size "+initialCapacity);
 
         if(useEnrichedStateSpace){
-            stateSpace.add(initialState);
-            initialStateIndex = 0;
+            stateSpace.add(getInitialState(backtrackingAllowed, lookForCrossing));
+            stateSpaceMap.put(getInitialState(backtrackingAllowed, lookForCrossing), 0);
         }
 
         for(Coordinate c1 : GRID){
@@ -219,20 +269,24 @@ public class Main {
 
                 //we store the state if (1.) it's not absorbing and (2.) it's possible
                 if(diagonalsAllowed || !Coordinate.parity(ss.X, ss.Y)) {
-                    if(useEnrichedStateSpace)
-                        stateSpace.addAll(ss.toTransientStates(diagonalsAllowed, lookForCrossing));
+                    if(useEnrichedStateSpace) {
+                        List<State> transientStates = ss.toTransientStates(diagonalsAllowed, lookForCrossing);
+                        //stateSpace.addAll(ss.toTransientStates(diagonalsAllowed, lookForCrossing));
+                        for(State ts : transientStates){
+                            stateSpace.add(ts);
+                            stateSpaceMap.put(ts, stateSpace.size()-1);
+                        }
+                    }
                     else{
-                        if(!ss.isAbsorbing(lookForCrossing))
+                        if(!ss.isAbsorbing(lookForCrossing)) {
                             stateSpace.add(ss);
-
-                        //(Also keep track of where we add the initial state)
-                        if(ss.equals(initialState))
-                            initialStateIndex = stateSpace.indexOf(ss);
+                            stateSpaceMap.put(ss, stateSpace.size()-1);
+                        }
                     }
                 }
             }
         }
 
-        return new MyTuple<>(stateSpace, initialStateIndex);
+        return new MyTuple<>(stateSpace, stateSpaceMap);
     }
 }
