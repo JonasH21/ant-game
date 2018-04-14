@@ -1,0 +1,3 @@
+[submodule "REK-Java"]
+	path = lib/REK-Java
+	url = https://github.com/zouzias/REK-Java.git
