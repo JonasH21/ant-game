@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="com.github.sharedlibs:stopwatch-java:1.0.0-Beta1-SNAPSHOT" type="repository">
+    <properties maven-id="com.github.sharedlibs:stopwatch-java:1.0.0-Beta1-SNAPSHOT" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/stopwatch-java-1.0.0-Beta1-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/lib/stopwatch-java-1.0.0-Beta1-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/stopwatch-java-1.0.0-Beta1-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
