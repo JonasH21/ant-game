@@ -16,16 +16,21 @@ public class Main {
 
     public static void main(String[] args){
         System.out.println("Welcome to Jonas's ant game solution\n");
-        System.out.println("I will solve the problem in the following subsections:");
-        System.out.println("1a. Expected time to collision, diagonals OK,");
-        System.out.println("1b. Expected time to collision, diagonals FORBIDDEN,");
-        System.out.println("2. Expected time to crossing, diagonals FORBIDDEN,");
-        System.out.println("where a \"collision\" is the situation defined in the problem, where both ants " +
-                "occupy the same square.\n\n");
+        System.out.println("  ___ \n" +
+                " (   >\n" +
+                "  __/_\n" +
+                " / /  \n" +
+                "<_/   \n\n");
+        System.out.println("There are six sub-problems to solve, for the combinations of three settings B, D, C " +
+                "(is backtracking permitted, are diagonals permitted, look for collision or crossing?)\n");
         System.out.println("I model the system as an absorbing Markov chain");
-        System.out.println("We have the concept of a \"state\" which is a pair of coordinates, corresponding to " +
-                "the positions of the two ants. For example ((x_1, y_1), (x_2, y_2)) is in the state space, S, for " +
-                "each x_1, x_2, y_1, y_2 < 8.\n");
+        System.out.println("We have the concept of a \"state\" which is a description of the ants' positions at any " +
+                "given time. In the simplest cases, when B=false and C=collision, a state is a pair of coordinates " +
+                "(c1, c2), where c1, c2 are the positions of ant A and B respectively. In the remaining cases, a state " +
+                "contains eight coordiantes (c1,c2),(d1,d2), where d1, d2 describe the direction of travel of ants A " +
+                "and B, respectively. For example if (c1,c2)=((3,2),(1,2)) and ant A has travelled from the south " +
+                "(from (3,1)) and ant B has travelled from the north-west (from (0,3)), then (d1,d2)=((0,1),(1,-1))." +
+                "\n");
         System.out.println("Given a state s in S, define F(s) to be the set of states t in S that are accessible " +
                 "from s. A state t=(ct1,ct2) is accessible from s=(cs1,cs2) if d(ct1,cs1) = d(ct2,ct2) = 1, " +
                 "where d is a distance function on the set of coordinates " +
@@ -35,18 +40,16 @@ public class Main {
                 "the probability P_st of transitioning from state s to state t is equal to " +
                 "I(t in F(s))/|F(s)|.");
         System.out.println("By defining the functions F on the state space, I will be in a position to populate " +
-                "the transiton matrix P. The transition matrix is m by m matrix with entries P_st defined above, " +
-                "where m is the size of the state space.");
+                "the transition matrix P. The transition matrix is the square matrix with entries P_st defined above.");
 
-        System.out.println("Define the matrix Q to be the submatrix of P where the absorbing states are removed. " +
-                "I also remove the impossible states: if diagonals are not allowed then both coordinates must have " +
-                "the same parity (in other words, the ants are either both on black squares or white squares " +
-                "of our chess-board. " +
-                "The absorbing states are the \"goal\" states, in the first case those states ((i,j),(i,j)) for all " +
-                "i,j<8.");
+        System.out.println("Define the matrix Q to be the sub-matrix of P where the absorbing states are removed. " +
+                "(An absorbing state is a \"goal\" state.)" +
+                "I also remove the impossible states; for example, if diagonals are not allowed then both coordinates must have " +
+                "the same parity (either both on black squares or white squares " +
+                "of a chess-board) -- this reduces the state space significantly.");
         System.out.println("Using these probabilities, I create a system of linear equations " +
                 "(I-Q)t = 1, where 1 is the column vector with entries all 1. I solve this for variable " +
-                "t_j0, where j0 is the index of the initial state.");
+                "t_j0, where j0 is the index of the initial state in Q.");
 
         GRID = new ArrayList<>(64);
         for (int x = 0; x < 8; x++)
@@ -75,7 +78,7 @@ public class Main {
      */
     private static void SimpleStatesLogic(boolean backtrackingAllowed, boolean diagonalsAllowed, boolean lookForCrossing){
         System.out.println("*********");
-        System.out.println("Setup: backtracking " + backtrackingAllowed + ", diagonals " + diagonalsAllowed + ", " + (lookForCrossing ? "crossing" : "collide"));
+        System.out.println("Setup: B " + backtrackingAllowed + ", D " + diagonalsAllowed + ", C " + (lookForCrossing ? "crossing" : "collide"));
         System.out.println("*********");
         boolean useEnrichedStateSpace = !backtrackingAllowed || lookForCrossing;
         HashMap<MyPair<Coordinate>, List<MyPair<Coordinate>>> availableMoves = new HashMap<>();
@@ -201,7 +204,7 @@ public class Main {
         System.out.println("Solving with REK");
         DoubleVector oneREK = new DenseVector(one);
         REKSolver solverREK = new REKSolver();
-        DoubleVector solutionREK = solverREK.solve(A,oneREK, 300d);
+        DoubleVector solutionREK = solverREK.solve(A,oneREK, 900d);
         double e = solutionREK.get(initialStateIndex);
         System.out.println("t_" + initialStateIndex + "=" + e);
 
