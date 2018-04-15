@@ -2,8 +2,8 @@ package com.ant;
 
 import java.util.Objects;
 
-class MyTuple<T,U> {
-    T X; U Y;
+public class MyTuple<T,U> {
+    public T X; public U Y;
 
     MyTuple(T x, U y){X=x;Y=y;}
 
@@ -14,6 +14,9 @@ class MyTuple<T,U> {
     public boolean equals(Object o){
         if (!(o instanceof MyTuple))
             return false;
+
+        if(this.Y == null || ((MyTuple)o).Y == null)
+            return this.Y == ((MyTuple)o).Y;
 
         return this.X.equals(((MyTuple)o).X) && this.Y.equals(((MyTuple)o).Y);
     }

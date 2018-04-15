@@ -9,10 +9,10 @@ import java.util.List;
  * The direction is a pair of deltas, so dir = ((0,1),(1,0)) suggests that AntA came from the S and AntB came from
  * the W
  */
-class State extends SimpleState {
+public class State extends SimpleState {
     MyPair<Coordinate> directionOfTravel;
 
-    State(Coordinate x, Coordinate y, Coordinate dirX, Coordinate dirY){
+    public State(Coordinate x, Coordinate y, Coordinate dirX, Coordinate dirY){
         super(x,y);
         directionOfTravel = new SimpleState(dirX, dirY);
     }
@@ -23,35 +23,24 @@ class State extends SimpleState {
     }
 
 
-    MyPair<Coordinate> getStateX(){
-        return new MyPair<>(X, directionOfTravel.X);
-    }
-    MyPair<Coordinate> getStateY(){
-        return new MyPair<>(Y, directionOfTravel.Y);
-    }
-
-    /**
-     * Given an ant's predicament defined by ant = ((x,y),(dx,dy)), where (x,y) is its position coordinate
-     * and (dx,dy) is its direction of travel, provide a collection of potential moves given the restrictions on
-     * diagonals and backtracking.
-     * @param ant
-     * @param diagonalsAllowed
-     * @param backtrackingAllowed
-     * @return
-     */
-    static List<MyPair<Coordinate>> getAccessibleMoves(MyPair<Coordinate> ant, boolean diagonalsAllowed, boolean backtrackingAllowed){
-        List<Coordinate> accessiblePositions = ant.X.getAccessiblePairs(diagonalsAllowed);
-        if(!backtrackingAllowed)
-            accessiblePositions.remove(ant.X.add(ant.Y.inverse()));
-
-        List<MyPair<Coordinate>> moves = new ArrayList<>();
-
-        for(Coordinate coordinate : accessiblePositions){
-            moves.add(new MyPair<>(coordinate, (Coordinate)coordinate.subtract(ant.X)));
+    @Override
+    public MyPair<Coordinate> getState(int index){
+        Coordinate position, directionOfTravel;
+        if(index == 0){
+            position = X;
+            directionOfTravel = this.directionOfTravel.X;
         }
+        else if(index == 1){
+            position = Y;
+            directionOfTravel = this.directionOfTravel.Y;
+        }
+        else
+            throw new IllegalArgumentException("index must be 0 or 1 (for X or Y respectively)");
 
-        return moves;
+        return new MyPair<>(position, directionOfTravel);
     }
+
+
 
     @Override
     Collection<State> getAccessibleStates(boolean diagonalsAllowed, boolean backtrackingAllowed, boolean lookForCrossing){
@@ -80,7 +69,7 @@ class State extends SimpleState {
 
 
     @Override
-    boolean isAbsorbing(boolean lookForCrossing){
+    public boolean isAbsorbing(boolean lookForCrossing){
         if (!lookForCrossing)
             return super.isAbsorbing(lookForCrossing);
 

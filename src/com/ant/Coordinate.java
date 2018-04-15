@@ -12,10 +12,10 @@ public class Coordinate extends AdditivePair<Integer> {
     static final Coordinate E = new Coordinate(1,0);
     static final Coordinate S = new Coordinate(0,-1);
     static final Coordinate W = new Coordinate(-1,0);
-    static final Coordinate O = new Coordinate(0,0);
+    public static final Coordinate O = new Coordinate(0,0);
     static final Collection<Coordinate> CornerAdjacents = new ArrayList<Coordinate>(4){{add(N.add(E));add(N.add(W));add(S.add(E));add(S.add(W));}};
 
-    Coordinate(int x, int y){super(x,y);}
+    public Coordinate(int x, int y){super(x,y);}
 
     @Override
     List<Coordinate> getAccessiblePairs(boolean diagonalsAllowed){
@@ -49,7 +49,11 @@ public class Coordinate extends AdditivePair<Integer> {
     }
 
     static boolean validateCoordinate(Coordinate c){
-        return !(c.X < 0 || c.Y < 0 || c.X >7 || c.Y > 7);
+        return !(c.X < 0 || c.Y < 0 || c.X > 7 || c.Y > 7);
+    }
+
+    static boolean validateCoordinates(Coordinate c1, Coordinate c2){
+        return validateCoordinate(c1) && validateCoordinate(c2);
     }
 
     /**
@@ -58,7 +62,7 @@ public class Coordinate extends AdditivePair<Integer> {
      *
      * @return 0 (false) for even parity/match, 1 (true) for odd parity/different
      */
-    static boolean parity(Coordinate c, Coordinate d){
+    public static boolean parity(Coordinate c, Coordinate d){
         return c.parity() != d.parity();
     }
 
